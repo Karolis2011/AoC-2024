@@ -126,6 +126,7 @@ impl PageList {
 }
 
 fn main() {
+    let start = std::time::Instant::now();
     // let mut matrix = WordSearchMatrix::new();
     let mut page_rules = PageRules::new();
     let mut book_list = vec![];
@@ -172,4 +173,6 @@ fn main() {
     println!("Result: {}", res1);
 
     println!("Result: {}", res2);
+
+    dprintln!("Time: {:?}", start.elapsed());
 }
