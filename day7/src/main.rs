@@ -177,7 +177,7 @@ fn main() {
         }
     }
 
-    println!("Equations: {:?}", equations);
+    // println!("Equations: {:?}", equations);
 
     let permutations_done = Arc::new(RwLock::new(0));  
     let incr_permutations_done = || {
@@ -192,9 +192,9 @@ fn main() {
         .filter_map(|e| {
             e.generate()
                 // .inspect(|e| println!("Trying {}", e))
-                .inspect(|_| {
-                    incr_permutations_done();
-                })
+                // .inspect(|_| {
+                //     incr_permutations_done();
+                // })
                 .find(|e| e.is_valid())
         })
         // Tun in to hashmap to remove duplicates\
@@ -207,9 +207,9 @@ fn main() {
             acc
         });
 
-    for (_, e) in valid_permutations.iter() {
-        println!("{}", e);
-    }
+    // for (_, e) in valid_permutations.iter() {
+    //     println!("{}", e);
+    // }
 
     println!(
         "Result: {}",
