@@ -125,17 +125,16 @@ impl<'a> MapGrouped<'a> {
     fn get_dxdy_for<O: IntoIterator<Item = (usize, usize)>>(
         position: (usize, usize),
         others: O,
-    ) -> Vec<(i32, i32)> {
+    ) -> impl Iterator<Item = (i32, i32)> {
         let (x, y) = position;
         let x = x as i32;
         let y = y as i32;
-        let mut result = Vec::new();
-        for (ox, oy) in others {
+
+        others.into_iter().map(move |(ox, oy)| {
             let ox = ox as i32;
             let oy = oy as i32;
-            result.push((ox - x, oy - y));
-        }
-        result
+            (ox - x, oy - y)
+        })
     }
 
     fn get_antinodes(&self, harmonics: bool) -> HashSet<PositionedMapElement> {
@@ -143,50 +142,40 @@ impl<'a> MapGrouped<'a> {
             .signals
             .iter()
             .map(|(_, v)| {
-                v.iter()
-                    .map(|a| {
-                        let dxdy = Self::get_dxdy_for(a.position, v.iter().map(|a| a.position));
-                        (
-                            a,
-                            dxdy.iter()
-                                .filter(|(dx, dy)| *dx != 0 && *dy != 0 || harmonics)
-                                .cartesian_product(match harmonics {
-                                    false => 0..1,
-                                    true => 0..(self.bounds.0.end.max(self.bounds.1.end + 1) as i32),
-                                })
-                                .filter_map(|((dx, dy), h)| {
-                                    let mut x = a.position.0 as i32;
-                                    let mut y = a.position.1 as i32;
-                                    // println!("dx: {}, dy: {}, x: {}, y: {}, h: {}", dx, dy, x, y, h);
-                                    x -= dx * (h + 1);
-                                    y -= dy * (h + 1);
-                                    if x.is_negative()
-                                        || y.is_negative()
-                                        || !self.bounds.0.contains(&(x as usize))
-                                        || !self.bounds.1.contains(&(y as usize))
-                                    {
-                                        return None;
-                                    }
-                                    Some(PositionedMapElement {
-                                        element: MapElement::AntiNode,
-                                        position: (x as usize, y as usize),
-                                    })
-                                })
-                                .collect::<Vec<_>>(),
-                        )
-                    })
-                    .collect::<Vec<_>>()
+                v.iter().map(|a| {
+                    let dxdy = Self::get_dxdy_for(a.position, v.iter().map(|a| a.position));
+                    dxdy.filter(|(dx, dy)| *dx != 0 && *dy != 0 || harmonics)
+                        .cartesian_product(match harmonics {
+                            false => 0..1,
+                            true => 0..(self.bounds.0.end.max(self.bounds.1.end + 1) as i32),
+                        })
+                        .filter_map(|((dx, dy), h)| {
+                            let mut x = a.position.0 as i32;
+                            let mut y = a.position.1 as i32;
+                            // println!("dx: {}, dy: {}, x: {}, y: {}, h: {}", dx, dy, x, y, h);
+                            x -= dx * (h + 1);
+                            y -= dy * (h + 1);
+                            if x.is_negative()
+                                || y.is_negative()
+                                || !self.bounds.0.contains(&(x as usize))
+                                || !self.bounds.1.contains(&(y as usize))
+                            {
+                                return None;
+                            }
+                            Some(PositionedMapElement {
+                                element: MapElement::AntiNode,
+                                position: (x as usize, y as usize),
+                            })
+                        })
+                })
             })
             .flatten()
-            .map(|(_, v)| v)
             .flatten()
             .fold(HashSet::new(), |mut acc, v| {
                 acc.insert(v);
                 acc
             });
     }
-
-    
 }
 
 fn main() {
