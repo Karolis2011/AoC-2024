@@ -7,3 +7,6 @@ Cargo.lock
 
 # If you use clippy:
 **/*.rs.clippy
+
+# AoC tos compliance
+*.txt
